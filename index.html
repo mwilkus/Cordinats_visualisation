@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curvilinear Coordinates Lab</title>
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- ============================================================ LEFT -->
+  <aside id="left" class="panel">
+    <header class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><path d="M4 26 C 10 12, 18 8, 28 6" stroke="url(#lg)" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M6 6 C 10 14, 14 20, 26 27" stroke="url(#lg)" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/><circle cx="14.6" cy="15.2" r="2.6" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h1>Curvilinear Coordinates Lab</h1>
+        <p class="sub">Covariant &amp; contravariant bases, metrics, Christoffel symbols</p>
+      </div>
+    </header>
+
+    <div class="scroll">
+      <!-- System -->
+      <section class="card" id="card-system">
+        <div class="card-h"><h2>Coordinate system</h2>
+          <div class="h-actions">
+            <button class="icon-btn" id="btn-reset-sys" title="Reset this system to its defaults (parameters, point, surfaces, vector, view)"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg></button>
+            <button class="icon-btn" id="btn-copy" title="Edit a copy as a custom system"><svg viewBox="0 0 24 24"><path d="M8 8h11v11H8z M5 16V5h11" /></svg></button>
+            <button class="icon-btn" id="btn-new" title="New custom system"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button class="icon-btn" id="btn-io" title="Import / export custom systems"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 19h14"/></svg></button>
+          </div>
+        </div>
+        <div class="select-wrap"><select id="sys-select"></select></div>
+        <div id="custom-actions" class="row-actions hidden">
+          <button class="btn sm" id="btn-edit">Edit</button>
+          <button class="btn sm danger" id="btn-delete">Delete</button>
+        </div>
+        <div class="badges" id="sys-badges"></div>
+        <div class="formula" id="sys-formula"></div>
+        <p class="note hidden" id="sys-note"></p>
+        <div id="sys-params"></div>
+      </section>
+
+      <!-- Bases -->
+      <section class="card">
+        <div class="card-h"><h2>Local bases at P</h2></div>
+        <label class="toggle big">
+          <input type="checkbox" id="t-cov" checked><span class="track"></span>
+          <span class="t-text"><b>Covariant</b> <span class="k" data-tex="\mathbf{E}_i = \dfrac{\partial \mathbf r}{\partial u^i}"></span><small>tangent to coordinate curves</small></span>
+          <span class="legend-arrow solid"></span>
+        </label>
+        <label class="toggle big">
+          <input type="checkbox" id="t-con" checked><span class="track"></span>
+          <span class="t-text"><b>Contravariant</b> <span class="k" data-tex="\mathbf{E}^i = \nabla u^i"></span><small>normal to coordinate surfaces</small></span>
+          <span class="legend-arrow dashed"></span>
+        </label>
+        <label class="toggle big">
+          <input type="checkbox" id="t-phys"><span class="track"></span>
+          <span class="t-text"><b>Physical components</b> <span class="k" data-tex="\hat{\mathbf e}_{(i)} = \mathbf E_i/\sqrt{g_{ii}}"></span><small>unit vectors along the coordinate curves</small></span>
+          <span class="legend-arrow dotted"></span>
+        </label>
+        <label class="toggle"><input type="checkbox" id="t-labels" checked><span class="track"></span><span>Labels</span></label>
+        <div class="field-row">
+          <span class="lbl">Arrow scale</span>
+          <div id="f-vscale"></div>
+        </div>
+      </section>
+
+      <!-- Surfaces -->
+      <section class="card">
+        <div class="card-h"><h2 id="surf-title">Coordinate surfaces</h2></div>
+        <p class="hint" id="surf-hint">One coordinate held constant – toggle each family and set its constant.</p>
+        <div id="surf-rows"></div>
+      </section>
+
+      <!-- Point -->
+      <section class="card">
+        <div class="card-h"><h2>Point P</h2></div>
+        <label class="toggle">
+          <input type="checkbox" id="t-snap" checked><span class="track"></span>
+          <span>Snap P to the active surfaces</span>
+        </label>
+        <p class="hint" id="snap-hint">P sits at the intersection of the active surfaces – moving a surface moves P, dragging P moves the surfaces.</p>
+        <div id="point-rows"></div>
+        <div class="sub-h">Cartesian position <small>type to move P – converted to system coordinates</small></div>
+        <div class="cart-inputs" id="point-cart"></div>
+        <p class="hint warn hidden" id="point-sing">P is at a singular point (det J = 0): the bases are not defined here.</p>
+      </section>
+
+      <!-- Display -->
+      <section class="card">
+        <div class="card-h"><h2>Display</h2></div>
+        <div class="grid2">
+          <label class="toggle"><input type="checkbox" id="t-curves" checked><span class="track"></span><span>Coord. curves through P</span></label>
+          <label class="toggle" id="w-grid"><input type="checkbox" id="t-grid" checked><span class="track"></span><span>Coordinate grid</span></label>
+          <label class="toggle"><input type="checkbox" id="t-axes" checked><span class="track"></span><span>Cartesian axes</span></label>
+          <label class="toggle" id="w-wire"><input type="checkbox" id="t-wire" checked><span class="track"></span><span>Surface mesh lines</span></label>
+        </div>
+        <div class="slider-row" id="w-opacity">
+          <span class="lbl">Surface opacity</span>
+          <input type="range" id="r-opacity" min="0.05" max="0.9" step="0.01" value="0.34">
+          <output id="o-opacity">0.34</output>
+        </div>
+        <div class="field-row">
+          <span class="lbl">Cartesian grid</span>
+          <div id="f-gridop"></div>
+        </div>
+        <p class="hint">Grid opacity (0 hides it). In 3D the grid is projected onto the walls behind the scene, so it stays visible when the axes are out of view. Scroll in the view to zoom – everything rescales with it.</p>
+        <div class="row-actions">
+          <button class="btn sm ghost" id="btn-reset-view">Reset view</button>
+          <button class="btn sm ghost" id="btn-center-p">Center on P</button>
+        </div>
+      </section>
+
+      <!-- Vector -->
+      <section class="card">
+        <div class="card-h"><h2>Vector decomposition</h2></div>
+        <label class="toggle">
+          <input type="checkbox" id="t-vec"><span class="track"></span>
+          <span>Show vector <span class="k" data-tex="\mathbf V"></span> at P</span>
+        </label>
+        <div id="vec-body" class="dim-when-off">
+          <div class="vec-inputs" id="vec-inputs"></div>
+          <label class="toggle"><input type="checkbox" id="t-vcon" checked><span class="track"></span><span><span class="k" data-tex="\mathbf V = V^i\,\mathbf E_i"></span> (contravariant comps.)</span></label>
+          <label class="toggle"><input type="checkbox" id="t-vco"><span class="track"></span><span><span class="k" data-tex="\mathbf V = V_i\,\mathbf E^i"></span> (covariant comps.)</span></label>
+          <label class="toggle"><input type="checkbox" id="t-vphys"><span class="track"></span><span><span class="k" data-tex="\mathbf V = V_{(i)}\,\hat{\mathbf e}_{(i)}"></span> (physical comps.)</span></label>
+          <p class="hint" id="vec-hint">In 2D you can drag the tip of V.</p>
+        </div>
+      </section>
+      
+    </div>
+  </aside>
+
+  <!-- ============================================================ STAGE -->
+  <main id="stage">
+    <div id="view3d"></div>
+    <canvas id="view2d"></canvas>
+    <div id="labels"></div>
+    <div class="hud tl" id="legend"></div>
+    <div class="hud bl" id="hud-point"></div>
+    <div class="hud br hint-hud" id="hud-hint"></div>
+    <div class="hud tr">
+      <button class="icon-btn" id="btn-toggle-left" title="Toggle left panel"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM9 5v14"/></svg></button>
+      <button class="icon-btn" id="btn-toggle-right" title="Toggle right panel"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM15 5v14"/></svg></button>
+    </div>
+  </main>
+
+  <!-- ============================================================ RIGHT -->
+  <aside id="right" class="panel">
+    <div class="right-h">
+      <div class="seg" id="seg-mode" role="tablist">
+        <button data-mode="alg" class="on">Algebraic</button>
+        <button data-mode="num">Numeric</button>
+      </div>
+      <div class="tabs" id="tabs">
+        <button data-tab="metric" class="on">Metric</button>
+        <button data-tab="jacobian">Jacobian · ds²</button>
+        <button data-tab="christoffel">Christoffel</button>
+        <button data-tab="vectors">Vectors</button>
+      </div>
+    </div>
+    <div class="scroll" id="tensor-body"></div>
+    <div class="progress hidden" id="sym-progress"><div class="bar"><i></i></div><span>Computing symbolic form…</span></div>
+  </aside>
+</div>
+
+<!-- ============================================================ EDITOR -->
+<dialog id="editor">
+  <form method="dialog" id="ed-form">
+    <header class="ed-h">
+      <h2 id="ed-title">Custom coordinate system</h2>
+      <button class="icon-btn" value="cancel" formnovalidate title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <div class="ed-body">
+      <div class="ed-col">
+        <div class="field"><label>Name</label><input id="ed-name" type="text" required placeholder="My coordinates"></div>
+        <div class="field"><label>Dimension</label>
+          <div class="seg" id="ed-dim"><button type="button" data-dim="2">2D</button><button type="button" data-dim="3" class="on">3D</button></div>
+        </div>
+        <div class="field">
+          <label>Parameters <small>constants usable in all formulas and ranges</small></label>
+          <div id="ed-params"></div>
+          <button type="button" class="btn sm ghost" id="ed-add-param">+ Add parameter</button>
+        </div>
+        <div class="field">
+          <label>Coordinates <small>Greek names (theta, phi, xi…) render as symbols; use inf / -inf for unbounded ranges</small></label>
+          <div class="ed-coords-head"><span>name</span><span>min</span><span>max</span><span>default</span><span title="periodic">⟳</span><span>surface label</span></div>
+          <div id="ed-coords"></div>
+        </div>
+        <div class="field">
+          <label>Cartesian position <small>math.js syntax: sin, cosh, sqrt, exp, ^, pi …</small></label>
+          <div class="map-row"><span class="k" data-tex="x ="></span><input id="ed-x" type="text" spellcheck="false"></div>
+          <div class="map-row"><span class="k" data-tex="y ="></span><input id="ed-y" type="text" spellcheck="false"></div>
+          <div class="map-row" id="ed-zrow"><span class="k" data-tex="z ="></span><input id="ed-z" type="text" spellcheck="false"></div>
+        </div>
+        <div class="field"><label>Initial view size <small>half-width of the visible region when the system opens</small></label><input id="ed-view" type="number" step="0.1" min="0.5" value="3.5"></div>
+      </div>
+      <div class="ed-col preview">
+        <label>Preview</label>
+        <div id="ed-preview" class="formula"></div>
+        <div id="ed-status" class="status"></div>
+        <details class="ed-help">
+          <summary>Tips</summary>
+          <ul>
+            <li>Non-orthogonal systems are fine – e.g. <code>x = u + v*cos(alpha)</code>, <code>y = v*sin(alpha)</code>.</li>
+            <li>Ranges may use parameters, e.g. <code>min = a+0.01</code>, and may be unbounded: <code>inf</code>, <code>-inf</code>.</li>
+            <li>Mark angle-like coordinates as periodic (⟳) so sliders wrap.</li>
+            <li>The metric, its inverse and Christoffel symbols are derived symbolically from your formulas.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+    <footer class="ed-f">
+      <button type="button" class="btn ghost" id="ed-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="ed-save">Save &amp; open</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="io-dialog">
+  <form method="dialog">
+    <header class="ed-h"><h2>Import / export</h2>
+      <button class="icon-btn" value="cancel" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div class="io-body">
+      <p class="hint">Custom systems are stored in this browser. Export them to a JSON file to back them up or share them.</p>
+      <div class="row-actions">
+        <button type="button" class="btn" id="io-export">Export custom systems</button>
+        <label class="btn" for="io-file">Import from file…</label>
+        <input type="file" id="io-file" accept=".json,application/json" hidden>
+      </div>
+      <p class="status" id="io-status"></p>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="vendor/math.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="js/expr.js"></script>
+<script src="js/cas.js"></script>
+<script src="js/systems.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/view3d.js"></script>
+<script src="js/view2d.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
